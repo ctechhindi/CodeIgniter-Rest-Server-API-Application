@@ -6,29 +6,24 @@ require APPPATH . '/libraries/REST_Controller.php';
  
 class Users extends \Restserver\Libraries\REST_Controller
 {
-    public function __construct()
-    {
+    public function __construct() {
         parent::__construct();
         $this->load->model('user_model');
     }
 
     /**
-     *  Add New User
+     * User Register
+     * --------------------------
+     * @param: fullname
+     * @param: email address
+     * @param: password
+     * @param: username
+     * --------------------------
      * @method : POST
+     * @link : api/user/register
      */
-    public function add_user_post()
-    {
-        
-    }
-
-    /**
-     *  Fetch All User Data
-     * @method : GET
-     */
-    public function fetch_all_users_get()
+    public function register_post()
     {
         header("Access-Control-Allow-Origin: *");
-        $data = $this->user_model->fetch_all_users();
-        $this->response($data);
     }
 }

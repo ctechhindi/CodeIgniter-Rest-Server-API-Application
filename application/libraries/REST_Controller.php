@@ -3,7 +3,6 @@ namespace Restserver\Libraries;
 
 use Exception;
 use stdClass;
-use Restserver\Libraries\Format;
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 
@@ -17,7 +16,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * @author          Phil Sturgeon, Chris Kacerguis
  * @license         MIT
  * @link            https://github.com/chriskacerguis/codeigniter-restserver
- * @version         3.0.0
+ * @version         3.0.0 (Update)
  */
 abstract class REST_Controller extends \CI_Controller {
 
@@ -629,6 +628,11 @@ abstract class REST_Controller extends \CI_Controller {
      */
     public function _remap($object_called, $arguments = [])
     {
+	    // Validation flag. Some errors in this function will create an error response
+	    // but will not exit immediately. In those cases we want to prevent the API
+	    // endpoint call if authentication/authorization fails.
+	    // TODO: Keep one exit point in the function.
+	    $is_valid_request = true;
         // Should we answer if not over SSL?
         if ($this->config->item('force_https') && $this->request->ssl === FALSE)
         {
@@ -636,6 +640,7 @@ abstract class REST_Controller extends \CI_Controller {
                     $this->config->item('rest_status_field_name') => FALSE,
                     $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_unsupported')
                 ], self::HTTP_FORBIDDEN);
+	        $is_valid_request = false;
         }
 
         // Remove the supported format from the function name e.g. index.json => index
@@ -671,6 +676,7 @@ abstract class REST_Controller extends \CI_Controller {
                     $this->config->item('rest_status_field_name') => FALSE,
                     $this->config->item('rest_message_field_name') => sprintf($this->lang->line('text_rest_invalid_api_key'), $this->rest->key)
                 ], self::HTTP_FORBIDDEN);
+	        $is_valid_request = false;
         }
 
         // Check to see if this key has access to the requested controller
@@ -685,6 +691,7 @@ abstract class REST_Controller extends \CI_Controller {
                     $this->config->item('rest_status_field_name') => FALSE,
                     $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_api_key_unauthorized')
                 ], self::HTTP_UNAUTHORIZED);
+	        $is_valid_request = false;
         }
 
         // Sure it exists, but can they do anything with it?
@@ -694,6 +701,7 @@ abstract class REST_Controller extends \CI_Controller {
                     $this->config->item('rest_status_field_name') => FALSE,
                     $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_unknown_method')
                 ], self::HTTP_METHOD_NOT_ALLOWED);
+	        $is_valid_request = false;
         }
 
         // Doing key related stuff? Can only do it if they have a key right?
@@ -703,7 +711,7 @@ abstract class REST_Controller extends \CI_Controller {
             if ($this->config->item('rest_enable_limits') && $this->_check_limit($controller_method) === FALSE)
             {
                 $response = [$this->config->item('rest_status_field_name') => FALSE, $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_api_key_time_limit')];
-                $this->response($response, self::HTTP_UNAUTHORIZED);
+                return $this->response($response, self::HTTP_UNAUTHORIZED);
             }
 
             // If no level is set use 0, they probably aren't using permissions
@@ -720,7 +728,7 @@ abstract class REST_Controller extends \CI_Controller {
             {
                 // They don't have good enough perms
                 $response = [$this->config->item('rest_status_field_name') => FALSE, $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_api_key_permissions')];
-                $this->response($response, self::HTTP_UNAUTHORIZED);
+                return $this->response($response, self::HTTP_UNAUTHORIZED);
             }
         }
 
@@ -728,7 +736,7 @@ abstract class REST_Controller extends \CI_Controller {
         elseif ($this->config->item('rest_limits_method') == "IP_ADDRESS" && $this->config->item('rest_enable_limits') && $this->_check_limit($controller_method) === FALSE)
         {
             $response = [$this->config->item('rest_status_field_name') => FALSE, $this->config->item('rest_message_field_name') => $this->lang->line('text_rest_ip_address_time_limit')];
-            $this->response($response, self::HTTP_UNAUTHORIZED);
+            return $this->response($response, self::HTTP_UNAUTHORIZED);
         }
 
         // No key stuff, but record that stuff is happening
@@ -740,7 +748,9 @@ abstract class REST_Controller extends \CI_Controller {
         // Call the controller method and passed arguments
         try
         {
-            call_user_func_array([$this, $controller_method], $arguments);
+        	if ( $is_valid_request ) {
+		        call_user_func_array([$this, $controller_method], $arguments);
+	        }
         }
         catch (Exception $ex)
         {
@@ -1470,7 +1480,6 @@ abstract class REST_Controller extends \CI_Controller {
     {
         if ($this->request->format)
         {
-            $this->request->body = $this->input->raw_input_stream;
             if ($this->request->format === 'json')
             {
                 $this->_put_args = json_decode($this->input->raw_input_stream);
@@ -1481,6 +1490,8 @@ abstract class REST_Controller extends \CI_Controller {
            // If no file type is provided, then there are probably just arguments
            $this->_put_args = $this->input->input_stream();
         }
+
+        $this->request->body = $this->input->raw_input_stream;
     }
 
     /**
@@ -1994,7 +2005,7 @@ abstract class REST_Controller extends \CI_Controller {
         // Check if the user is logged into the system
         if ($this->_check_login($username, $password) === FALSE)
         {
-            $this->_force_login();
+            $this->_force_login('', 'auth');
         }
     }
 
@@ -2026,7 +2037,7 @@ abstract class REST_Controller extends \CI_Controller {
         // again if none given or if the user enters wrong auth information
         if (empty($digest_string))
         {
-            $this->_force_login($unique_id);
+            $this->_force_login($unique_id, 'digest');
         }
 
         // We need to retrieve authentication data from the $digest_string variable
@@ -2038,7 +2049,7 @@ abstract class REST_Controller extends \CI_Controller {
         $username = $this->_check_login($digest['username'], TRUE);
         if (array_key_exists('username', $digest) === FALSE || $username === FALSE)
         {
-            $this->_force_login($unique_id);
+            $this->_force_login($unique_id, 'digest');
         }
 
         $md5 = md5(strtoupper($this->request->method).':'.$digest['uri']);
@@ -2113,9 +2124,9 @@ abstract class REST_Controller extends \CI_Controller {
      * each time
      * @return void
      */
-    protected function _force_login($nonce = '')
+    protected function _force_login($nonce = '', $rest_auth = '')
     {
-        $rest_auth = $this->config->item('rest_auth');
+        
         $rest_realm = $this->config->item('rest_realm');
         if (strtolower($rest_auth) === 'basic')
         {

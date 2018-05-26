@@ -5,7 +5,7 @@
 
 # Requirements
 
-- Xampp
+- XAMPP
 - PHP 5.6.8
 
 
