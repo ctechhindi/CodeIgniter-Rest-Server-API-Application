@@ -16,4 +16,6 @@
 
 # Git Commit's
 
+- User Registration flow on a REST API
+- Setup Project for User login and register
 - Getting Started Again
