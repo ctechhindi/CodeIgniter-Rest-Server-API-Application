@@ -124,7 +124,7 @@ class Users extends \Restserver\Libraries\REST_Controller
                 $this->load->library('Authorization_Token');
 
                 // Generate Token
-                $token_data['user_id'] = $output->id;
+                $token_data['id'] = $output->id;
                 $token_data['full_name'] = $output->full_name;
                 $token_data['username'] = $output->username;
                 $token_data['email'] = $output->email;

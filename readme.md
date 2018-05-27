@@ -16,6 +16,7 @@
 
 # Git Commit's
 
+- Create/Add a new Article with User Authorization
 - Generate PHP Token for User Authorization Using `PHP-JWT` Library
 - User Login flow on a REST API
 - User Registration flow on a REST API
