@@ -120,11 +120,26 @@ class Users extends \Restserver\Libraries\REST_Controller
             $output = $this->UserModel->user_login($this->input->post('username'), $this->input->post('password'));
             if (!empty($output) AND $output != FALSE)
             {
+                // Load Authorization Token Library
+                $this->load->library('Authorization_Token');
+
+                // Generate Token
+                $token_data['user_id'] = $output->id;
+                $token_data['full_name'] = $output->full_name;
+                $token_data['username'] = $output->username;
+                $token_data['email'] = $output->email;
+                $token_data['created_at'] = $output->created_at;
+                $token_data['updated_at'] = $output->updated_at;
+                $token_data['time'] = time();
+
+                $user_token = $this->authorization_token->generateToken($token_data);
+
                 $return_data = [
                     'user_id' => $output->id,
                     'full_name' => $output->full_name,
                     'email' => $output->email,
                     'created_at' => $output->created_at,
+                    'token' => $user_token,
                 ];
 
                 // Login Success

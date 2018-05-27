@@ -12,10 +12,11 @@
 # Libraries
 
 - [Rest Server](https://github.com/chriskacerguis/codeigniter-restserver)
-
+- [php-jwt](https://github.com/firebase/php-jwt)
 
 # Git Commit's
 
+- Generate PHP Token for User Authorization Using `PHP-JWT` Library
 - User Login flow on a REST API
 - User Registration flow on a REST API
 - Setup Project for User login and register
