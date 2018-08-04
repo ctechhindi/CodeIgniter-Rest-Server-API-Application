@@ -86,4 +86,67 @@ class Articles extends \Restserver\Libraries\REST_Controller
             $this->response(['status' => FALSE, 'message' => $is_valid_token['message'] ], REST_Controller::HTTP_NOT_FOUND);
         }
     }
+
+    /**
+     * Delete an Article with API
+     * @method: DELETE
+     */
+    public function deleteArticle_delete($id)
+    {
+        header("Access-Control-Allow-Origin: *");
+    
+        // Load Authorization Token Library
+        $this->load->library('Authorization_Token');
+
+        /**
+         * User Token Validation
+         */
+        $is_valid_token = $this->authorization_token->validateToken();
+        if (!empty($is_valid_token) AND $is_valid_token['status'] === TRUE)
+        {
+            # Delete a User Article
+
+            # XSS Filtering (https://www.codeigniter.com/user_guide/libraries/security.html)
+            $id = $this->security->xss_clean($id);
+            
+            if (empty($id) AND !is_numeric($id))
+            {
+                $this->response(['status' => FALSE, 'message' => 'Invalid Article ID' ], REST_Controller::HTTP_NOT_FOUND);
+            }
+            else
+            {
+                // Load Article Model
+                $this->load->model('article_model', 'ArticleModel');
+
+                $delete_article = [
+                    'id' => $id,
+                    'user_id' => $is_valid_token['data']->id,
+                ];
+
+                // Delete an Article
+                $output = $this->ArticleModel->delete_article($delete_article);
+
+                if ($output > 0 AND !empty($output))
+                {
+                    // Success
+                    $message = [
+                        'status' => true,
+                        'message' => "Article Deleted"
+                    ];
+                    $this->response($message, REST_Controller::HTTP_OK);
+                } else
+                {
+                    // Error
+                    $message = [
+                        'status' => FALSE,
+                        'message' => "Article not delete"
+                    ];
+                    $this->response($message, REST_Controller::HTTP_NOT_FOUND);
+                }
+            }
+
+        } else {
+            $this->response(['status' => FALSE, 'message' => $is_valid_token['message'] ], REST_Controller::HTTP_NOT_FOUND);
+        }
+    }
 }
