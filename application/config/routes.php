@@ -63,3 +63,6 @@ $route['api/article/create'] = 'api/articles/createArticle';
 // Deleta an Article Routes
 # https://codeigniter.com/user_guide/general/routing.html#using-http-verbs-in-routes
 $route['api/article/(:num)/delete']["DELETE"] = 'api/articles/deleteArticle/$1';
+
+// Update and Article Route :: PUT API Request
+$route['api/article/update']["put"] = 'api/articles/updateArticle';
