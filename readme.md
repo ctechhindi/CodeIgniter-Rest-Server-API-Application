@@ -15,9 +15,16 @@
 - [Rest Server](https://github.com/chriskacerguis/codeigniter-restserver)
 - [php-jwt](https://github.com/firebase/php-jwt)
 
+# Note
+
+It is important to understand that the purpose of using JWT is NOT to hide or obscure data in any way. The reason why JWT are used is to prove that the sent data was actually created by an authentic source.
+
+Since JWT are signed and encoded only, and since JWT are not encrypted, JWT do not guarantee any security for sensitive data.
 
 # Git Commit's
 
+- Deleta an Article
+- Update and Article
 - Create/Add a new Article with User Authorization
 - Generate PHP Token for User Authorization Using `PHP-JWT` Library
 - User Login flow on a REST API
