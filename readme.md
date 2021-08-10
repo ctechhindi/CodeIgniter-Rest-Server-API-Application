@@ -23,8 +23,8 @@ Since JWT are signed and encoded only, and since JWT are not encrypted, JWT do n
 
 # Git Commit's
 
-- Deleta an Article
-- Update and Article
+- Delete an Article
+- Update an Article
 - Create/Add a new Article with User Authorization
 - Generate PHP Token for User Authorization Using `PHP-JWT` Library
 - User Login flow on a REST API
